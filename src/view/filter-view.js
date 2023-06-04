@@ -1,40 +1,54 @@
-import AbstractView from '../framework/view/abstract-view';
-import { SortTypeForDrawing } from '../const';
-import { capitalizeType } from '../utils/utils';
-import { isDisabled } from '../utils/sorts';
+import AbstractView from '../framework/view/abstract-view.js';
 
-function createSortItemTemplate(sortType) {
+function createFilterItemTemplate(filter, currentFilterType) {
   return `
-  <div class="trip-sort__item  trip-sort__item--${sortType}">
-    <input id="sort-${sortType}" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-${sortType}" ${isDisabled(sortType)} ${(sortType === 'day' ? 'checked' : '')}>
-    <label class="trip-sort__btn" for="sort-${sortType}">${capitalizeType(sortType)}</label>
-  </div>`;
+  <div class="trip-filters__filter">
+      <input
+      id="filter-${filter.type}"
+      class="trip-filters__filter-input  visually-hidden"
+      type="radio"
+      name="trip-filter"
+      value="${filter.type}"
+      ${filter.type === currentFilterType ? 'checked' : ''}>
+      <label class="trip-filters__filter-label"
+      for="filter-${filter.type}">${filter.name}</label>
+  </div>
+  `;
 }
 
-function createSortTemplate() {
-  const sortItemsTemplate = Object.values(SortTypeForDrawing).map((sortType) => createSortItemTemplate(sortType)).join('');
+function createFilterTemplate(filterItems, currentFilterType) {
+  const filterItemsTemplate = filterItems
+    .map((filter) => createFilterItemTemplate(filter, currentFilterType))
+    .join('');
   return (`
-  <form class="trip-events__trip-sort  trip-sort" action="#" method="get">
-    ${sortItemsTemplate}
-  </form>`
+    <form class="trip-filters" action="#" method="get">
+      ${filterItemsTemplate}
+      <button class="visually-hidden" type="submit">Accept filter</button>
+    </form>`
   );
 }
 
-export default class SortView extends AbstractView {
+export default class FilterView extends AbstractView{
+  #filters = null;
+  #currentFilter = null;
 
-  get template() {
-    return createSortTemplate();
+  constructor({filters, currentFilterType, onFilterTypeChange}) {
+    super();
+    this.#filters = filters;
+    this.#currentFilter = currentFilterType;
+    this._callback.onFilterTypeChange = onFilterTypeChange;
+
+    this.element.addEventListener('change', this.#filterTypeChangeHandler);
+
   }
 
-  setSortTypeChangeHandler = (callback) => {
-    this._callback.sortTypeChange = callback;
-    this.element.addEventListener('change', this.#sortTypeChangeHandler);
-  };
+  get template() {
+    return createFilterTemplate(this.#filters, this.#currentFilter);
+  }
 
-  #sortTypeChangeHandler = (evt) => {
+  #filterTypeChangeHandler = (evt) => {
     evt.preventDefault();
-    this._callback.sortTypeChange(evt.target.value);
+    this._callback.onFilterTypeChange(evt.target.value);
   };
-
 
 }
