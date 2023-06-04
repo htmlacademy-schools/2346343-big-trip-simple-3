@@ -1,13 +1,9 @@
-import { SortType } from '../mock/const';
+import dayjs from 'dayjs';
 
-const sorts = {
-  [SortType.DAY]: () => (0),
-  [SortType.EVENT]: () => (0),
-  [SortType.OFFERS]: () => (0),
-  [SortType.PRICE]: () => (0),
-  [SortType.TIME]: () => (0),
-};
+const disabledSorts = ['event', 'offer' ];
+const isDisabled = (sortType) => (disabledSorts.includes(sortType) ? 'disabled' : '');
 
-const generateSorter = () => Object.keys(sorts).map((sortName) => sortName);
+const sortPointsByPrice = (pointA, pointB) => pointB.basePrice - pointA.basePrice;
+const sortPointsByDate = (pointA, pointB) => dayjs(pointA.dateFrom).diff(dayjs(pointB.dateFrom));
 
-export { generateSorter };
+export { isDisabled, sortPointsByDate, sortPointsByPrice };
