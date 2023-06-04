@@ -12,8 +12,6 @@ const convertToTime = (date) => dayjs(date).format(TIME_FORMAT);
 const convertToBasicime = (date) => dayjs(date).format(BASIC_DATE_FORMAT);
 const convertToFormDate = (date) => dayjs(date).format(FORM_DATE_FORMAT);
 
-function isDatesEqual(dateA, dateB) {
-  return (dateA === null && dateB === null) || dayjs(dateA).isSame(dateB, 'D');
-}
+const isDatesEqual = (dateA, dateB) => (!dateA && !dateB) || dayjs(dateA).isSame(dateB, 'D');
 
 export {convertToBasicime, convertToDateTime, convertToEventDate, convertToEventDateTime, convertToFormDate, convertToTime, isDatesEqual};

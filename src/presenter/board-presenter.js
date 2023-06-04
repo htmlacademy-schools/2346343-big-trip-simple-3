@@ -1,12 +1,15 @@
 import SortView from '../view/sort-view';
 import NoPointsView from '../view/no-points-view';
+import TripPointListView from '../view/trip-point-list-view';
+import LoadingView from '../view/loading-view';
+
 import {RenderPosition, render, remove } from '../framework/render.js';
 import TripPointPresenter from './trip-point-presenter';
-import TripPointListView from '../view/trip-point-list-view';
+import NewTripPointPresenter from './new-trip-point-presenter';
+
 import { FilterType, SortType, UpdateType, UserAction } from '../const';
 import { sorts } from '../utils/sorts';
 import { filter } from '../utils/filter';
-import NewTripPointPresenter from './new-trip-point-presenter';
 
 export default class BoardPresenter {
   #boardContainer = null;
@@ -14,16 +17,18 @@ export default class BoardPresenter {
   #destinationsModel = null;
   #offersModel = null;
   #filterModel = null;
-  #destinations = null;
-  #offers = null;
 
   #tripPointsListComponent = new TripPointListView();
   #noTripPointComponent = null;
+  #loadingComponent = new LoadingView();
   #sortComponent = null;
+
   #tripPointPresenter = new Map();
   #newTripPointPresenter = null;
+
   #currentSortType = SortType.DAY;
   #filterType = FilterType.EVERYTHING;
+  #isLoading = true;
 
   constructor({boardContainer, tripPointsModel, destinationsModel, offersModel, filterModel, onNewTripPointDestroy}) {
     this.#boardContainer = boardContainer;
@@ -45,7 +50,7 @@ export default class BoardPresenter {
 
   get tripPoints() {
     this.#filterType = this.#filterModel.filter;
-    const tripPoints = this.#tripPointsModel.tripPoints;
+    const tripPoints = this.#tripPointsModel.tripPoints.sort(sorts[SortType.TIME]);
     const filteredTripPoints = filter[this.#filterType](tripPoints);
     return (sorts[this.#currentSortType]) ? filteredTripPoints.sort(sorts[this.#currentSortType]) : filteredTripPoints;
   }
@@ -59,15 +64,19 @@ export default class BoardPresenter {
   }
 
   init() {
-    this.#destinations = [...this.#destinationsModel.destinations];
-    this.#offers = [...this.#offersModel.offers];
+
     this.#renderBoard();
   }
 
   createTripPoint() {
     this.#currentSortType = SortType.DAY;
     this.#filterModel.setFilter(UpdateType.MAJOR, FilterType.EVERYTHING);
-    this.#newTripPointPresenter.init(this.#destinations, this.offers);
+
+    if(this.#noTripPointComponent) {
+      remove(this.#noTripPointComponent);
+    }
+
+    this.#newTripPointPresenter.init(this.destinations, this.offers);
   }
 
   #handleViewAction = (actionType, updateType, update) => {
@@ -89,7 +98,7 @@ export default class BoardPresenter {
 
     switch(updateType) {
       case UpdateType.PATCH:
-        this.#tripPointPresenter.get(data.id).init(data);
+        this.#tripPointPresenter.get(data.id).init(data, this.destinations, this.offers);
         break;
       case UpdateType.MINOR:
         this.#clearBoard();
@@ -98,11 +107,18 @@ export default class BoardPresenter {
       case UpdateType.MAJOR:
         this.#clearBoard({resetSortType: true});
         this.#renderBoard();
-
+        break;
+      case UpdateType.INIT:
+        this.#isLoading = false;
+        remove(this.#loadingComponent);
+        this.#renderBoard();
         break;
     }
   };
 
+  #renderLoading() {
+    render(this.#loadingComponent, this.#boardContainer, RenderPosition.AFTERBEGIN);
+  }
 
   #renderNoTripPoints() {
     this.#noTripPointComponent = new NoPointsView({
@@ -144,13 +160,12 @@ export default class BoardPresenter {
       onDataChange: this.#handleViewAction
     });
 
-    tripPoinPresenter.init(tripPoint, this.#destinations, this.#offers);
+    tripPoinPresenter.init(tripPoint, this.destinations, this.offers);
     this.#tripPointPresenter.set(tripPoint.id, tripPoinPresenter);
   }
 
 
   #renderTripPoints(tripPoints) {
-    //console.log(tripPoints);
     tripPoints.forEach((tripPoint) => this.#renderTripPoint(tripPoint));
 
   }
@@ -162,6 +177,7 @@ export default class BoardPresenter {
     this.#tripPointPresenter.clear();
 
     remove(this.#sortComponent);
+    remove(this.#loadingComponent);
 
     if(this.#noTripPointComponent) {
       remove(this.#noTripPointComponent);
@@ -173,15 +189,20 @@ export default class BoardPresenter {
   }
 
   #renderBoard() {
+
+    if(this.#isLoading) {
+      this.#renderLoading();
+      return;
+    }
     const tripPoints = this.tripPoints;
+
     if (tripPoints.length === 0) {
       this.#renderNoTripPoints();
       return;
     }
+
     this.#renderSort();
-
     render(this.#tripPointsListComponent, this.#boardContainer);
-
     this.#renderTripPoints(tripPoints);
 
   }
