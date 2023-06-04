@@ -91,6 +91,7 @@ export default class TripPointPresenter {
   #replaceFormToPoint = () => {
     replace(this.#tripPointComponent, this.#editFormComponent);
     this.#mode = Mode.DEFAULT;
+    document.body.removeEventListener('keydown', this.#ecsKeyDownHandler);
   };
 
   #ecsKeyDownHandler = (evt) => {
@@ -122,7 +123,6 @@ export default class TripPointPresenter {
   #handleRollupButtonClick = () => {
     this.#editFormComponent.reset(this.#tripPoint);
     this.#replaceFormToPoint();
-    document.body.removeEventListener('keydown', this.#ecsKeyDownHandler);
   };
 
   #handleDeleteClick = (tripPoint) => {
