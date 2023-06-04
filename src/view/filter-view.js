@@ -1,30 +1,40 @@
-import AbstractView from '../framework/view/abstract-view.js';
-import { FilterType } from '../mock/const.js';
-import { capitalizeType } from '../utils/utils.js';
+import AbstractView from '../framework/view/abstract-view';
+import { SortTypeForDrawing } from '../const';
+import { capitalizeType } from '../utils/utils';
+import { isDisabled } from '../utils/sorts';
 
-function createFilterItemTemplate(filterType) {
+function createSortItemTemplate(sortType) {
   return `
-  <div class="trip-filters__filter">
-      <input id="filter-${filterType}" class="trip-filters__filter-input  visually-hidden" type="radio" name="trip-filter" value="${filterType}">
-      <label class="trip-filters__filter-label" for="filter-${filterType}">${capitalizeType(filterType)}</label>
-  </div>
-  `;
+  <div class="trip-sort__item  trip-sort__item--${sortType}">
+    <input id="sort-${sortType}" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-${sortType}" ${isDisabled(sortType)} ${(sortType === 'day' ? 'checked' : '')}>
+    <label class="trip-sort__btn" for="sort-${sortType}">${capitalizeType(sortType)}</label>
+  </div>`;
 }
 
-function createFilterTemplate() {
-  const filterItems = Object.keys(FilterType).map((filter) => createFilterItemTemplate(filter)).join('');
+function createSortTemplate() {
+  const sortItemsTemplate = Object.values(SortTypeForDrawing).map((sortType) => createSortItemTemplate(sortType)).join('');
   return (`
-    <form class="trip-filters" action="#" method="get">
-      ${filterItems}
-      <button class="visually-hidden" type="submit">Accept filter</button>
-    </form>`
+  <form class="trip-events__trip-sort  trip-sort" action="#" method="get">
+    ${sortItemsTemplate}
+  </form>`
   );
 }
 
-export default class FilterView extends AbstractView{
+export default class SortView extends AbstractView {
 
   get template() {
-    return createFilterTemplate();
+    return createSortTemplate();
   }
+
+  setSortTypeChangeHandler = (callback) => {
+    this._callback.sortTypeChange = callback;
+    this.element.addEventListener('change', this.#sortTypeChangeHandler);
+  };
+
+  #sortTypeChangeHandler = (evt) => {
+    evt.preventDefault();
+    this._callback.sortTypeChange(evt.target.value);
+  };
+
 
 }
