@@ -1,11 +1,6 @@
-import { getRandomSliceFromItems } from './utils';
-import { offersByType } from '../mock/const';
+const getItemFromItemsById = (items, id) => (items.find((item) => item.id === id));
+const isEscapeKey = (evt) => evt.key === 'Escape';
+const capitalizeType = (type) => type.charAt(0).toUpperCase() + type.slice(1);
 
-const getOffersByType = (type) => offersByType.find((offers) => offers.type === type).offers;
 
-const getRandomOffersIdsByType = (type) => {
-  const currentTypeRandomOffers = getRandomSliceFromItems(getOffersByType(type));
-  return currentTypeRandomOffers.map((offer) => offer.id);
-};
-
-export {getRandomOffersIdsByType, getOffersByType };
+export { capitalizeType, getItemFromItemsById, isEscapeKey };
