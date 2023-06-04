@@ -113,7 +113,7 @@ function createEditFormTemplate(tripPoint, destinations, offers, isEditForm) {
         <label class="event__label event__type-output" for="event-destination-${tripPoint.id}">
         ${capitalizeType(tripPoint.type)}
         </label>
-        <input class="event__input event__input--destination" id="event-destination-${tripPoint.id}" type="text" name="event-destination" value="${(destination) ? destination.name : ''}" list="destination-list-${tripPoint.id}">
+        <input class="event__input event__input--destination" id="event-destination-${tripPoint.id}" type="text" name="event-destination" value="${(destination) ? destination.name : ''}" list="destination-list-${tripPoint.id}" autocomplete="off">
         <datalist id="destination-list-${tripPoint.id}">
           ${createDestinationList(destinations)}
         </datalist>
@@ -132,7 +132,7 @@ function createEditFormTemplate(tripPoint, destinations, offers, isEditForm) {
           <span class="visually-hidden">Price</span>
           &euro;
         </label>
-        <input class="event__input event__input--price" id="event-price-${tripPoint.id}" type="text" name="event-price" value="${tripPoint.basePrice}">
+        <input class="event__input event__input--price" id="event-price-${tripPoint.id}" type="number" name="event-price" value="${tripPoint.basePrice}">
       </div>
 
       <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
@@ -154,7 +154,7 @@ export default class EditFormView extends AbstractStatefulView {
   #fromDatepicker = null;
   #toDatepicker = null;
 
-  constructor({tripPoint = BLANK_TRIPPOINT, destinations, offers, onFormSubmit = () => (0), onRollUpButton, isEditForm = true}) {
+  constructor({tripPoint = BLANK_TRIPPOINT, destinations, offers, onFormSubmit = () => (0), onRollUpButton, isEditForm = true, onDeleteClick}) {
     super();
     this._setState(EditFormView.parseTripPointToState(tripPoint, offers));
 
@@ -163,6 +163,7 @@ export default class EditFormView extends AbstractStatefulView {
     this.#isEditForm = isEditForm;
     this._callback.onFormSubmit = onFormSubmit;
     this._callback.onRollUpButton = onRollUpButton;
+    this._callback.onDeleteClick = onDeleteClick;
 
     this._restoreHandlers();
   }
@@ -203,6 +204,8 @@ export default class EditFormView extends AbstractStatefulView {
       .addEventListener('input', this.#priceInputHandler);
     this.element.querySelector('.event__available-offers')
       .addEventListener('change', this.#offersHandler);
+    this.element.querySelector('.event__reset-btn')
+      .addEventListener('click', this.#formResetClickHandler);
     if (this.#isEditForm) {
       this.element.querySelector('.event__save-btn').addEventListener('click', this.#formSubmitHandler);
       this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#rollUpButtonHandler);
@@ -258,6 +261,11 @@ export default class EditFormView extends AbstractStatefulView {
   #rollUpButtonHandler = (evt) => {
     evt.preventDefault();
     this._callback.onRollUpButton();
+  };
+
+  #formResetClickHandler = (evt) => {
+    evt.preventDefault();
+    this._callback.onDeleteClick(EditFormView.parseStateToTripPoint(this._state));
   };
 
   #eventTypeHandler = (evt) => {
